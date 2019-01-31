@@ -3,7 +3,7 @@ package intercom
 import (
 	"encoding/json"
 
-	"github.com/bebus77/intercom-go/interfaces"
+	"gopkg.in/bebus77/intercom-go.v2/interfaces"
 )
 
 // MessageRepository defines the interface for creating and updating Messages through the API.

@@ -1,7 +1,7 @@
 package intercom
 
 import (
-	"github.com/bebus77/intercom-go/interfaces"
+	"gopkg.in/bebus77/intercom-go.v2/interfaces"
 )
 
 // A Client manages interacting with the Intercom API.

@@ -2,7 +2,7 @@ package intercom
 
 import (
 	"encoding/json"
-	"github.com/bebus77/intercom-go/interfaces"
+	"gopkg.in/bebus77/intercom-go.v2/interfaces"
 )
 
 // AdminRepository defines the interface for working with Admins through the API.
