@@ -30,7 +30,7 @@ func TestUserAPIFind(t *testing.T) {
 }
 
 func TestUserAPIFindByEmail(t *testing.T) {
-	http := TestUserHTTPClient{fixtureFilename: "fixtures/user.json", expectedURI: "/users", t: t}
+	http := TestUserHTTPClient{fixtureFilename: "fixtures/users.json", expectedURI: "/users", t: t}
 	api := UserAPI{httpClient: &http}
 	user, _ := api.find(UserIdentifiers{Email: "myuser@example.io"})
 	if user.Email != "myuser@example.io" {

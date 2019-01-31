@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/intercom/intercom-go.v2/interfaces"
+	"github.com/bebus77/intercom-go/interfaces"
 )
 
 // UserRepository defines the interface for working with Users through the API.
@@ -23,8 +23,9 @@ type UserAPI struct {
 }
 
 type requestScroll struct {
-	ScrollParam            string                 `json:"scroll_param,omitempty"`
+	ScrollParam string `json:"scroll_param,omitempty"`
 }
+
 type requestUser struct {
 	ID                     string                 `json:"id,omitempty"`
 	Email                  string                 `json:"email,omitempty"`
@@ -43,18 +44,21 @@ type requestUser struct {
 	LastSeenUserAgent      string                 `json:"last_seen_user_agent,omitempty"`
 }
 
-func (api UserAPI) find(params UserIdentifiers) (User, error) {
-	return unmarshalToUser(api.getClientForFind(params))
+type userSearchResponse struct {
+	Users []User
 }
 
-func (api UserAPI) getClientForFind(params UserIdentifiers) ([]byte, error) {
+func (api UserAPI) find(params UserIdentifiers) (User, error) {
+	var user User
+
 	switch {
 	case params.ID != "":
-		return api.httpClient.Get(fmt.Sprintf("/users/%s", params.ID), nil)
+		return unmarshalToUser(api.httpClient.Get(fmt.Sprintf("/users/%s", params.ID), nil))
 	case params.UserID != "", params.Email != "":
-		return api.httpClient.Get("/users", params)
+		return unmarshalListToUser(api.httpClient.Get("/users", params))
 	}
-	return nil, errors.New("Missing User Identifier")
+
+	return user, errors.New("Missing User Identifier")
 }
 
 func (api UserAPI) list(params userListParams) (UserList, error) {
@@ -68,17 +72,17 @@ func (api UserAPI) list(params userListParams) (UserList, error) {
 }
 
 func (api UserAPI) scroll(scrollParam string) (UserList, error) {
-       userList := UserList{}
+	userList := UserList{}
 
-       url := "/users/scroll"
-       params := scrollParams{ ScrollParam: scrollParam }
-       data, err := api.httpClient.Get(url, params)
+	url := "/users/scroll"
+	params := scrollParams{ScrollParam: scrollParam}
+	data, err := api.httpClient.Get(url, params)
 
-       if err != nil {
-               return userList, err
-       }
-       err = json.Unmarshal(data, &userList)
-       return userList, err
+	if err != nil {
+		return userList, err
+	}
+	err = json.Unmarshal(data, &userList)
+	return userList, err
 }
 
 func (api UserAPI) save(user *User) (User, error) {
@@ -92,6 +96,28 @@ func unmarshalToUser(data []byte, err error) (User, error) {
 	}
 	err = json.Unmarshal(data, &savedUser)
 	return savedUser, err
+}
+
+func unmarshalListToUser(data []byte, err error) (User, error) {
+	saved := User{}
+	if err != nil {
+		return saved, err
+	}
+
+	resp := userSearchResponse{}
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return saved, err
+	}
+
+	if len(resp.Users) == 0 {
+		return saved, interfaces.HTTPError{
+			StatusCode: 404,
+			Code:       "not_found",
+			Message:    "User Not Found",
+		}
+	}
+
+	return resp.Users[0], nil
 }
 
 func (api UserAPI) delete(id string) (User, error) {
